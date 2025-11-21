@@ -1,5 +1,4 @@
 # Campus-Security-Operations-Lab-AD-Nessus-and-Threat-Hunting
-Home lab simulating a small campus network with pfSense, Active Directory, Nmap, Nessus, and basic threat hunting in Windows event logs.
 
 ## 1. Overview
 
@@ -8,9 +7,9 @@ This lab simulates a small Windows domain behind a pfSense firewall, with a doma
 Goals:
 
 - Build and harden a basic AD environment
-- Discover hosts and services with Nmap
-- Run unauthenticated and authenticated Nessus scans
-- Generate suspicious activity and hunt it in Windows event logs
+- Practice host and service discovery on an internal network
+- Practice authenticated vs unauthenticated vuln scanning
+- Practice basic log-based threat hunting
 
 **Technologies used**
 
@@ -22,7 +21,24 @@ Goals:
 - Nmap
 - Tenable Nessus Essentials
 
-## 1.1 How to reproduce this lab
+## 1.1 Project status
+
+This lab is fully functional as a small campus-style network and is already used for:
+
+- AD design and GPO baselining (students vs staff)
+- Internal network scanning with Nmap
+- Unauthenticated and authenticated Nessus vulnerability scans
+- Basic threat hunting on Windows Security events (Event ID 4625)
+
+I’m actively expanding it into a more complete “University SOC” environment. Planned enhancements:
+
+- Add a Kali attacker VM in a pfSense-protected DMZ and a small web server to simulate an external attacker
+- Deploy Wazuh as a SIEM and forward logs from WIN-DC1, WIN-CLT1, pfSense and the DMZ server
+- Integrate Suricata (or similar IDS) for network-based detections
+- Build detection use cases (failed logon brute force, port scans, web attacks) with Wazuh queries and mini response runbooks
+- Add a formal remediation section showing before/after Nessus results mapped to the NIST CSF (identify → protect → detect → respond → recover)
+
+## 1.2 How to reproduce this lab
 
 **Prerequisites**
 
