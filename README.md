@@ -180,15 +180,6 @@ A small noisy event was created by trying repeatedly to reach the DC admin share
 
 ![Simulated failed logons](screenshots/20-threat-simulated-failed-logons.png)
 
-Command used on WIN-CLT1:
-
-```powershell
-for ($i = 0; $i -lt 5; $i++) {
-    try {
-        net use \\WIN-DC1\C$ /user:CAMPUS\fakeuser WrongPass!1
-    } catch {}
-}
-
 ### 7.2 Event log on DC1
 
 Event 4625 showing the failed logon from WIN-CLT1:
