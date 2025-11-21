@@ -12,6 +12,36 @@ Goals:
 - Run unauthenticated and authenticated Nessus scans
 - Generate suspicious activity and hunt it in Windows event logs
 
+**Technologies used**
+
+- VirtualBox (VM hosting)
+- GNS3 (network emulation / topology)
+- pfSense (firewall / router)
+- Windows Server 2022 (AD DS, GPO, Event Viewer)
+- Windows 11 client
+- Nmap
+- Tenable Nessus Essentials
+
+## 1.1 How to reproduce this lab
+
+**Prerequisites**
+
+- Host OS: Windows / Linux with VirtualBox and GNS3
+- RAM: ~16 GB recommended
+- Disk: ~150 GB free
+- ISOs: pfSense, Windows Server 2022, Windows 11 Enterprise Evaluation
+- Nessus Essentials account (free)
+
+**High-level build steps**
+
+1. Build the GNS3 topology shown in Section 2 using pfSense and a router.
+2. Install and configure pfSense interfaces as in Section 3.1.
+3. Deploy WIN-DC1, promote to domain controller, and configure IP/DNS.
+4. Deploy WIN-CLT1, join it to the CAMPUS domain.
+5. Create OUs, users, groups, and GPOs as in Section 4.
+6. Install Nmap and Nessus on WIN-CLT1 and run the scans in Section 5–6.
+7. Simulate the failed logons and hunt Event 4625 as in Section 7.
+
 ## 2. Lab Topology
 
 ![GNS3 topology](screenshots/00-gns3-topology.png)
@@ -195,3 +225,88 @@ This event ties the simulated attack back to the client:
 - Source Network Address: `10.10.30.50`  
 
 Together with the earlier screenshot from WIN-CLT1, this shows end to end visibility from a noisy authentication attempt on the client to the corresponding security log entry on the domain controller.
+
+## 8. Vulnerability remediation plan and next steps
+
+This lab intentionally starts in a “Day 0” baseline state with missing patches and weak defaults.  
+The goal of this section is to outline how I would harden the environment based on the Nessus
+findings and standard hardening guidance.
+
+### 8.1 Priorities
+
+Remediation is grouped by priority:
+
+- **P1 – Critical and High vulnerabilities**
+  - Apply all missing Windows cumulative updates on `WIN-DC1` and `WIN-CLT1`.
+  - Patch .NET, Microsoft Edge, and any other components flagged as Critical or High.
+  - Reboot and re-run the authenticated Nessus scan to confirm that all Critical and High findings
+    are cleared or reduced.
+
+- **P2 – Reduce attack surface**
+  - Review open ports from the Nmap and Nessus results and disable unneeded services.
+  - Restrict RDP to administrators only, enforce Network Level Authentication, and block RDP
+    from non-trusted networks.
+  - Tighten Windows Firewall rules on both the domain controller and the client.
+
+- **P3 – Strengthen identity and access controls**
+  - Enforce strong password and lockout policies through Group Policy.
+  - Create separate admin accounts for domain administration and remove day-to-day use of
+    `CAMPUS\administrator`.
+  - Limit membership of privileged groups (Domain Admins, Enterprise Admins, etc.).
+
+- **P4 – Hardening and configuration baselines**
+  - Move toward CIS Benchmarks or Microsoft Security Baselines for Windows Server and
+    Windows 11.
+  - Disable legacy protocols where possible (for example, older SMB dialects, weak TLS versions).
+  - Standardize secure browser settings for Edge on both hosts.
+
+- **P5 – Monitoring and detection**
+  - Forward Security and System logs from `WIN-DC1` and `WIN-CLT1` to a central log collector
+    or SIEM.
+  - Build detections around repeated failed logons (Event ID 4625), RDP activity, and changes
+    to group membership or GPOs.
+
+### 8.2 Host-specific hardening
+
+**Domain controller – `WIN-DC1` (10.10.20.10)**
+
+- Patch to the latest supported Windows Server cumulative update.
+- Review all Critical / High Nessus findings for `WIN-DC1` and:
+  - Apply OS and .NET updates.
+  - Harden SMB (signing required, guest access disabled).
+  - Enforce secure protocols and ciphers for remote management.
+- Lock down RDP:
+  - Allow only from administrative workstations or a jump host.
+  - Require NLA and strong authentication.
+- Apply AD-focused GPOs:
+  - Password, lockout, and Kerberos policies.
+  - Logging and auditing settings for account management, logon events, and object access.
+
+**Client – `WIN-CLT1` (10.10.30.50)**
+
+- Patch Windows 11 to current.
+- Patch Edge and any other client-side software flagged by Nessus.
+- Enable BitLocker and secure boot (for a real deployment).
+- Use GPO to enforce:
+  - Browser security settings.
+  - Local firewall rules.
+  - Restrictions on running unsigned scripts or unknown binaries.
+ 
+### 8.3 Alignment with NIST CSF
+
+This lab is small, but the workflow roughly follows the NIST Cybersecurity Framework:
+
+- **Identify:** Use Nmap and Nessus to discover hosts, services, and vulnerabilities.
+- **Protect:** Apply Group Policy, AD design, and basic hardening to reduce attack surface.
+- **Detect:** Use Windows Security logs (Event ID 4625) to identify suspicious authentication activity.
+- **Respond:** Prioritize and plan remediation based on Nessus findings.
+
+The goal is to practice the same kind of iterative “identify → protect → detect → respond” cycle that would be used in a real environment, just on a smaller campus-style network.
+
+## 9. Skills demonstrated
+
+- Designing and implementing a routed lab network with pfSense
+- Building and managing a small Active Directory domain
+- Using Nmap for host discovery and service enumeration
+- Running unauthenticated and authenticated Nessus scans and exporting results
+- Correlating simulated attack activity on a client with domain controller security logs (Event ID 4625)
