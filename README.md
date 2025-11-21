@@ -188,3 +188,19 @@ for ($i = 0; $i -lt 5; $i++) {
         net use \\WIN-DC1\C$ /user:CAMPUS\fakeuser WrongPass!1
     } catch {}
 }
+
+### 7.2 Event log on DC1
+
+Event 4625 showing the failed logon from WIN-CLT1:
+
+![Threat-hunt Event 4625](screenshots/21-threat-hunt-event-4625.png)
+
+This event ties the simulated attack back to the client:
+
+- Event ID 4625 – An account failed to log on  
+- Account Name: `fakeuser`  
+- Account Domain: `CAMPUS`  
+- Workstation Name: `WIN-CLT1`  
+- Source Network Address: `10.10.30.50`  
+
+Together with the earlier screenshot from WIN-CLT1, this shows end to end visibility from a noisy authentication attempt on the client to the corresponding security log entry on the domain controller.
